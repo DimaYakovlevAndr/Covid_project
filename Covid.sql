@@ -4,45 +4,45 @@
 --select * from PortfolioCovid.dbo.Vaccinations
 --order by 3,4
 
--- Посчитать смертность
+-- РџРѕСЃС‡РёС‚Р°С‚СЊ СЃРјРµСЂС‚РЅРѕСЃС‚СЊ
 Select Location, date, total_cases,total_deaths, (total_deaths/total_cases)*100 as mortality
 from PortfolioCovid.dbo.Deaths
 order by 1,2
 
--- Посчитать заразность 
+-- ГЏГ®Г±Г·ГЁГІГ ГІГј Г§Г Г°Г Г§Г­Г®Г±ГІГј 
 Select Location, date, Population, total_cases,  (total_cases/population)*100 as contagiousness
 From PortfolioCovid.dbo.Deaths
 order by 1,2
 
 
--- Посчитать страны с наибольшим кол-вом заражений 
+-- ГЏГ®Г±Г·ГЁГІГ ГІГј Г±ГІГ°Г Г­Г» Г± Г­Г ГЁГЎГ®Г«ГјГёГЁГ¬ ГЄГ®Г«-ГўГ®Г¬ Г§Г Г°Г Г¦ГҐГ­ГЁГ© 
 select location, population, MAX (total_cases) as HighestInfectionCount, Max((total_cases/population))*100 as contagiousness
 from PortfolioCovid.dbo.Deaths 
 Group by Location, Population
 order by contagiousness desc
 
--- Посчитать страны с самой высокой сметрностью
+-- ГЏГ®Г±Г·ГЁГІГ ГІГј Г±ГІГ°Г Г­Г» Г± Г±Г Г¬Г®Г© ГўГ»Г±Г®ГЄГ®Г© Г±Г¬ГҐГІГ°Г­Г®Г±ГІГјГѕ
 select location, MAX(cast(total_deaths as int)) as TotalDeaths
 from PortfolioCovid.dbo.Deaths 
 Where continent is not null 
 Group by Location
 order by TotalDeaths desc
 
--- Посчитать континенты с самой высокой сметрностью
+-- ГЏГ®Г±Г·ГЁГІГ ГІГј ГЄГ®Г­ГІГЁГ­ГҐГ­ГІГ» Г± Г±Г Г¬Г®Г© ГўГ»Г±Г®ГЄГ®Г© Г±Г¬ГҐГІГ°Г­Г®Г±ГІГјГѕ
 select location, MAX(cast(total_deaths as int)) as TotalDeaths
 from PortfolioCovid.dbo.Deaths 
 Where continent is null 
 Group by location
 order by TotalDeaths desc
 
--- Общие цифры
+-- ГЋГЎГ№ГЁГҐ Г¶ГЁГґГ°Г»
 Select SUM(new_cases) as total_cases, SUM(cast(new_deaths as int)) as total_deaths, SUM(cast(new_deaths as int))/SUM(New_Cases)*100 as DeathPercentage
 From PortfolioCovid.dbo.Deaths 
 where continent is not null 
 order by 1,2
 
--- Процент населения, получивший хотя бы одну дозу вакцину 
--- Создать колонку RollingPeopleVaccinated, в которой суммируется кол-во вакцинированных
+-- ГЏГ°Г®Г¶ГҐГ­ГІ Г­Г Г±ГҐГ«ГҐГ­ГЁГї, ГЇГ®Г«ГіГ·ГЁГўГёГЁГ© ГµГ®ГІГї ГЎГ» Г®Г¤Г­Гі Г¤Г®Г§Гі ГўГ ГЄГ¶ГЁГ­Гі 
+-- Г‘Г®Г§Г¤Г ГІГј ГЄГ®Г«Г®Г­ГЄГі RollingPeopleVaccinated, Гў ГЄГ®ГІГ®Г°Г®Г© Г±ГіГ¬Г¬ГЁГ°ГіГҐГІГ±Гї ГЄГ®Г«-ГўГ® ГўГ ГЄГ¶ГЁГ­ГЁГ°Г®ГўГ Г­Г­Г»Гµ
 select death.continent, death.location,  death.date, death.population, vacs.new_vaccinations
 , SUM(CONVERT(int,vacs.new_vaccinations)) OVER (Partition by death.Location order by death.Date) as RollingPeopleVaccinated
 from PortfolioCovid.dbo.Deaths death
@@ -52,7 +52,7 @@ Join PortfolioCovid.dbo.Vaccinations vacs
 where death.continent is not null
 order by 1,2
 
---Посчитать процент
+--ГЏГ®Г±Г·ГЁГІГ ГІГј ГЇГ°Г®Г¶ГҐГ­ГІ
 With VaccinatedPercentage (Continent, Location, Date, Population, New_Vaccinations, RollingPeopleVaccinated)
 as
 (
@@ -67,7 +67,7 @@ where death.continent is not null
 Select *, (RollingPeopleVaccinated/Population)*100
 From VaccinatedPercentage
 
--- Сделать таблицу по вакцинированным
+-- Г‘Г¤ГҐГ«Г ГІГј ГІГ ГЎГ«ГЁГ¶Гі ГЇГ® ГўГ ГЄГ¶ГЁГ­ГЁГ°Г®ГўГ Г­Г­Г»Г¬
 
 DROP Table if exists #PercentPopulationVaccinated
 Create Table #PercentPopulationVaccinated
@@ -92,7 +92,7 @@ Select *, (RollingPeopleVaccinated/Population)*100
 From #PercentPopulationVaccinated
 
 
--- Создаем view для последующей визуализации
+-- Г‘Г®Г§Г¤Г ГҐГ¬ view Г¤Г«Гї ГЇГ®Г±Г«ГҐГ¤ГіГѕГ№ГҐГ© ГўГЁГ§ГіГ Г«ГЁГ§Г Г¶ГЁГЁ
 DROP VIEW if exists PercentPopulationVaccinated ;
 GO
 
